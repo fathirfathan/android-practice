@@ -10,7 +10,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.effatheresoft.androidpractice.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
@@ -32,26 +37,23 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        val executor = Executors.newSingleThreadExecutor()
-        val handler = Handler(Looper.getMainLooper())
-
         binding.textViewProgress.visibility = GONE
         binding.buttonSend.setOnClickListener {
             binding.buttonSend.isEnabled = false
             if (!binding.textViewProgress.isVisible) binding.textViewProgress.visibility = VISIBLE
 
-            executor.execute {
+            lifecycleScope.launch(Dispatchers.Default) {
                 for (i in 1..100) {
-                    Thread.sleep(20)
+                    delay(20)
                     val percentage = i * 1
-                    handler.post {
+                    withContext(Dispatchers.Main) {
                         binding.textViewProgress.text = resources.getString(
                             R.string.progress,
                             percentage)
                     }
 
                     if (percentage == 100) {
-                        handler.post {
+                        withContext(Dispatchers.Main) {
                             binding.buttonSend.isEnabled = true
                         }
                     }
