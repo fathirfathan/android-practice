@@ -48,6 +48,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.android.async.http)
+    implementation(libs.glide)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
