@@ -13,3 +13,12 @@ data class TaskResponse(
 	@field:SerializedName("title")
 	val title: String
 )
+
+data class TaskRequest(
+
+	@field:SerializedName("title")
+	val title: String,
+
+	@field:SerializedName("completed")
+	val completed: Boolean,
+)

@@ -12,18 +12,14 @@ import com.effatheresoft.androidpractice.databinding.ActivityMainBinding
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import kotlin.jvm.java
 
 class MainActivity : AppCompatActivity() {
-    private var _binding: ActivityMainBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        _binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -31,39 +27,73 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        binding.progressBarTasks.visibility = GONE
+        showLoading(false)
         binding.recyclerViewTasks.layoutManager = LinearLayoutManager(this)
         binding.buttonGetTasks.setOnClickListener {
-            binding.progressBarTasks.visibility = VISIBLE
+            showLoading(true)
             fetchAllTasks { tasks ->
-                val taskAdapter = TaskAdapter()
-                taskAdapter.submitList(tasks)
-                binding.recyclerViewTasks.adapter = taskAdapter
-                binding.progressBarTasks.visibility = GONE
+                attachAdapterWithTasks(tasks)
+                showLoading(false)
+            }
+        }
+        binding.buttonAddTask.setOnClickListener {
+            showLoading(true)
+            val newTask = TaskRequest(
+                binding.textInputLayoutTask.editText?.text.toString(), false)
+            addTask(newTask) {
+                fetchAllTasks { tasks ->
+                    attachAdapterWithTasks(tasks)
+                    showLoading(false)
+                    binding.textInputLayoutTask.editText?.setText("")
+                }
             }
         }
     }
 
+    fun showLoading(isLoading: Boolean) {
+        if (isLoading) {
+            binding.progressBarTasks.visibility = VISIBLE
+        } else {
+            binding.progressBarTasks.visibility = GONE
+        }
+    }
+
+    fun attachAdapterWithTasks(tasks: List<TaskResponse>) {
+        val taskAdapter = TaskAdapter()
+        taskAdapter.submitList(tasks)
+        binding.recyclerViewTasks.adapter = taskAdapter
+    }
+
     fun fetchAllTasks(callback: (List<TaskResponse>) -> Unit) {
-        val baseUrl = "https://68a31757c5a31eb7bb1ee984.mockapi.io/"
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val apiService = retrofit.create(TaskApiService::class.java)
-
-        apiService.fetchAllTasks().enqueue(object: Callback<List<TaskResponse>> {
+        ApiConfig.getApiService().fetchAllTasks().enqueue(object: Callback<List<TaskResponse>> {
             override fun onResponse(
                 call: Call<List<TaskResponse>>,
                 response: Response<List<TaskResponse>>
             ) {
                 val taskResponse = response.body()
-                if (taskResponse != null) { callback(taskResponse) }
+                if (taskResponse != null) callback(taskResponse)
             }
 
             override fun onFailure(
                 call: Call<List<TaskResponse>>,
+                t: Throwable
+            ) {
+
+            }
+        })
+    }
+
+    fun addTask(task: TaskRequest, callback: () -> Unit) {
+        ApiConfig.getApiService().createTask(task).enqueue(object: Callback<Any> {
+            override fun onResponse(
+                call: Call<Any>,
+                response: Response<Any>
+            ) {
+                if (response.isSuccessful) callback()
+            }
+
+            override fun onFailure(
+                call: Call<Any>,
                 t: Throwable
             ) {
 
