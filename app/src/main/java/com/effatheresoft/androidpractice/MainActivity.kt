@@ -1,7 +1,6 @@
 package com.effatheresoft.androidpractice
 
 import android.os.Bundle
-import android.os.Handler
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import androidx.activity.enableEdgeToEdge
@@ -15,7 +14,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.Executors
 import kotlin.jvm.java
 
 class MainActivity : AppCompatActivity() {
@@ -38,17 +36,16 @@ class MainActivity : AppCompatActivity() {
         binding.buttonGetTasks.setOnClickListener {
             binding.progressBarTasks.visibility = VISIBLE
             fetchAllTasks { tasks ->
-                binding.recyclerViewTasks.adapter = TaskAdapter(tasks)
+                val taskAdapter = TaskAdapter()
+                taskAdapter.submitList(tasks)
+                binding.recyclerViewTasks.adapter = taskAdapter
                 binding.progressBarTasks.visibility = GONE
             }
         }
     }
 
-    fun fetchAllTasks(callback: (ArrayList<String>) -> Unit) {
+    fun fetchAllTasks(callback: (List<TaskResponse>) -> Unit) {
         val baseUrl = "https://68a31757c5a31eb7bb1ee984.mockapi.io/"
-        val executor = Executors.newSingleThreadExecutor()
-        val handler = Handler(mainLooper)
-        val tasks = ArrayList<String>()
 
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
@@ -62,23 +59,14 @@ class MainActivity : AppCompatActivity() {
                 response: Response<List<TaskResponse>>
             ) {
                 val taskResponse = response.body()
-                if (taskResponse != null) {
-                    executor.execute {
-                        for (i in 0 until taskResponse.size) {
-                            val title = taskResponse[i].title
-                            tasks.add(title)
-                        }
-                        handler.post { callback(tasks) }
-                    }
-
-                } else { callback(tasks) }
+                if (taskResponse != null) { callback(taskResponse) }
             }
 
             override fun onFailure(
                 call: Call<List<TaskResponse>>,
                 t: Throwable
             ) {
-                callback(tasks)
+
             }
         })
     }
