@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_margin="16dp"
+    tools:context=".ui.home.HomeFragment">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonToSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="To Settings"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonClearDatabase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear Database"
+        app:layout_constraintTop_toBottomOf="@id/buttonToSettings"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewTask"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/buttonClearDatabase"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/progressCircularTask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/recyclerViewTask"
+        app:layout_constraintBottom_toBottomOf="@id/recyclerViewTask"
+        app:layout_constraintLeft_toLeftOf="@id/recyclerViewTask"
+        app:layout_constraintRight_toRightOf="@id/recyclerViewTask"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

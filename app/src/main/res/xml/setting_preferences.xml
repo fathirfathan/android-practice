@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <EditTextPreference
+        android:key="settings_key_name"
+        android:summary="-"
+        android:title="Name"
+        app:iconSpaceReserved="false"/>
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="dark_mode"
+        android:title="Dark Mode"
+        app:iconSpaceReserved="false"/>
+</androidx.preference.PreferenceScreen>
