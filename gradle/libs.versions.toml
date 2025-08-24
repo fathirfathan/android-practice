@@ -19,12 +19,14 @@ activity = "1.10.1"
 constraintlayout = "2.2.1"
 mockitoCore = "5.19.0"
 mockitoInline = "5.2.0"
+moshiKotlin = "1.15.2"
 navigationKtx = "2.9.3"
 preference = "1.2.1"
 retrofit = "3.0.0"
 runner = "1.7.0"
 viewpager2 = "1.1.0"
 room = "2.7.2"
+workRuntime = "2.10.3"
 
 [libraries]
 android-async-http = { module = "com.loopj.android:android-async-http", version.ref = "androidAsyncHttp" }
@@ -47,6 +49,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-rules = { module = "androidx.test:rules", version.ref = "runner" }
 androidx-runner = { module = "androidx.test:runner", version.ref = "runner" }
 androidx-viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
+androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntime" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -61,6 +64,8 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockitoInline" }
+moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlin" }
+moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshiKotlin" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 
 [plugins]
