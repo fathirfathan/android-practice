@@ -154,4 +154,53 @@
         app:layout_constraintLeft_toRightOf="@id/buttonSetAlarm"
         app:layout_constraintRight_toRightOf="parent"/>
 
+    <Button
+        android:id="@+id/buttonRunOneTimeTask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:text="Run One Time Task"
+        app:layout_constraintTop_toBottomOf="@id/buttonSetAlarm"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <TextView
+        android:id="@+id/textViewOneTimeTaskStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Status:"
+        app:layout_constraintTop_toBottomOf="@id/buttonRunOneTimeTask"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <Button
+        android:id="@+id/buttonRunPeriodicTask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:text="Run A Task"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintTop_toBottomOf="@id/textViewOneTimeTaskStatus"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/buttonCancelPeriodicTask"/>
+
+    <Button
+        android:id="@+id/buttonCancelPeriodicTask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancel Task"
+        android:enabled="false"
+        app:layout_constraintTop_toBottomOf="@id/textViewOneTimeTaskStatus"
+        app:layout_constraintLeft_toRightOf="@id/buttonRunPeriodicTask"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <TextView
+        android:id="@+id/textViewPeriodicTaskStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Status:"
+        app:layout_constraintTop_toBottomOf="@id/buttonRunPeriodicTask"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -24,6 +24,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.work.Constraints
+import androidx.work.Data
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.effatheresoft.androidpractice.AlarmReceiver.Companion.TYPE_DAILY
 import com.effatheresoft.androidpractice.DetailsActivity.Companion.EXTRA_INFO
 import com.effatheresoft.androidpractice.databinding.ActivityMainBinding
@@ -31,6 +38,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(),
     View.OnClickListener,
@@ -41,7 +49,9 @@ class MainActivity : AppCompatActivity(),
     private lateinit var alarmReceiver: AlarmReceiver
     private lateinit var binding: ActivityMainBinding
     private lateinit var broadcastDataStringFormat: String
+    private lateinit var periodicWorkRequest: PeriodicWorkRequest
     private lateinit var timeStringFormat: String
+    private lateinit var workManager: WorkManager
 
     companion object {
         const val ACTION_LONG_RUNNING = "long_running_action"
@@ -61,6 +71,7 @@ class MainActivity : AppCompatActivity(),
         alarmReceiver = AlarmReceiver()
         broadcastDataStringFormat = getString(R.string.received_broadcast_data)
         timeStringFormat = getString(R.string.elapsed_time)
+        workManager = WorkManager.getInstance(this)
 
         binding.textViewBroadcastData.text = broadcastDataStringFormat.format("Not Received")
         binding.textViewElapsedTime.text = timeStringFormat.format("0.00s")
@@ -77,10 +88,13 @@ class MainActivity : AppCompatActivity(),
     override fun onClick(view: View) {
         when(view) {
             binding.buttonCancelDailyAlarm -> cancelDailyAlarm()
+            binding.buttonCancelPeriodicTask -> cancelPeriodicTask()
             binding.buttonPermission -> getNotificationPermission()
             binding.buttonPushNotification -> sendNotificationDocumentation()
             binding.buttonPushNotificationDetails -> sendNotificationDetails()
             binding.buttonResetBroadcast -> resetBroadcastTexts()
+            binding.buttonRunOneTimeTask -> runOneTimeTask()
+            binding.buttonRunPeriodicTask -> runPeriodicTask()
             binding.buttonSendBroadcast -> sendBroadcast()
             binding.buttonSetAlarm -> setAlarm()
             binding.buttonSetDate -> setDate()
@@ -106,12 +120,17 @@ class MainActivity : AppCompatActivity(),
 
     fun cancelDailyAlarm() = alarmReceiver.cancelAlarm(this, TYPE_DAILY)
 
+    private fun cancelPeriodicTask() {
+        workManager.cancelWorkById(periodicWorkRequest.id)
+        binding.buttonRunPeriodicTask.isEnabled = true
+    }
+
+
     private fun getNotificationPermission() {
         if (Build.VERSION.SDK_INT >= 33)
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         else showToast("Permission is not needed")
     }
-
 
     private fun isDateInvalid(date: String, format: String): Boolean {
         return try {
@@ -147,6 +166,51 @@ class MainActivity : AppCompatActivity(),
     ) { isPermissionGranted ->
         if (isPermissionGranted) showToast("Permission is granted")
         else showToast("Permission is rejected")
+    }
+
+    private fun runOneTimeTask() {
+        binding.textViewOneTimeTaskStatus.text = "Status:"
+        val data = Data.Builder()
+            .putString(TaskWorker.EXTRA_DATA, "Some arbitrary data")
+            .putBoolean(TaskWorker.EXTRA_IS_SUCCESS, true)
+            .build()
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val oneTimeWorkRequest = OneTimeWorkRequest.Builder(TaskWorker::class.java)
+            .setInputData(data)
+            .setConstraints(constraints)
+            .build()
+        workManager.enqueue(oneTimeWorkRequest)
+        workManager.getWorkInfoByIdLiveData(oneTimeWorkRequest.id).observe(this) {
+            val resultStatus = it?.state?.name
+            binding.textViewOneTimeTaskStatus.append("\n$resultStatus")
+        }
+    }
+
+    private fun runPeriodicTask() {
+        binding.textViewPeriodicTaskStatus.text = "Status:"
+        binding.buttonRunPeriodicTask.isEnabled = false
+        val data = Data.Builder()
+            .putString(TaskWorker.EXTRA_DATA, "Some arbitrary data")
+            .putBoolean(TaskWorker.EXTRA_IS_SUCCESS, true)
+            .build()
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        periodicWorkRequest = PeriodicWorkRequest.Builder(TaskWorker::class.java, 15, TimeUnit.MINUTES)
+            .setInputData(data)
+            .setConstraints(constraints)
+            .build()
+        workManager.enqueue(periodicWorkRequest)
+        workManager.getWorkInfoByIdLiveData(periodicWorkRequest.id).observe(this) {
+            val resultStatus = it?.state?.name
+            binding.textViewPeriodicTaskStatus.append("\n$resultStatus")
+            binding.buttonCancelPeriodicTask.isEnabled = false
+            if (it?.state == WorkInfo.State.ENQUEUED) {
+                binding.buttonCancelPeriodicTask.isEnabled = true
+            }
+        }
     }
 
     private fun sendBroadcast() {
@@ -293,10 +357,13 @@ class MainActivity : AppCompatActivity(),
 
     private fun setOnClickListeners() {
         binding.buttonCancelDailyAlarm.setOnClickListener(this)
+        binding.buttonCancelPeriodicTask.setOnClickListener(this)
         binding.buttonPermission.setOnClickListener(this)
         binding.buttonPushNotification.setOnClickListener(this)
         binding.buttonPushNotificationDetails.setOnClickListener(this)
         binding.buttonResetBroadcast.setOnClickListener(this)
+        binding.buttonRunOneTimeTask.setOnClickListener(this)
+        binding.buttonRunPeriodicTask.setOnClickListener(this)
         binding.buttonSendBroadcast.setOnClickListener(this)
         binding.buttonSetAlarm.setOnClickListener(this)
         binding.buttonSetDate.setOnClickListener(this)
