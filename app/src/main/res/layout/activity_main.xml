@@ -7,22 +7,31 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/buttonPermission"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Get Permission"
+        android:text="Get Notification Permission"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>
 
-    <com.google.android.material.button.MaterialButton
+    <Button
+        android:id="@+id/buttonPushNotification"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Push Notification"
+        app:layout_constraintTop_toBottomOf="@id/buttonPermission"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <Button
         android:id="@+id/buttonSendBroadcast"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Send Delayed (1s) Broadcast Intent"
-        app:layout_constraintTop_toBottomOf="@id/buttonPermission"
+        app:layout_constraintTop_toBottomOf="@id/buttonPushNotification"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/buttonResetBroadcast"/>
 
@@ -31,7 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Reset"
-        app:layout_constraintTop_toBottomOf="@id/buttonPermission"
+        app:layout_constraintTop_toBottomOf="@id/buttonPushNotification"
         app:layout_constraintLeft_toRightOf="@id/buttonSendBroadcast"
         app:layout_constraintRight_toRightOf="parent"/>
 
