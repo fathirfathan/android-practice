@@ -4,11 +4,11 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.effatheresoft.androidpractice.DetailsActivity.Companion.EXTRA_INFO
 import com.effatheresoft.androidpractice.databinding.ActivityMainBinding
 import java.util.concurrent.Executors
 
@@ -58,6 +59,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         binding.buttonPermission.setOnClickListener(this)
         binding.buttonPushNotification.setOnClickListener(this)
+        binding.buttonPushNotificationDetails.setOnClickListener(this)
         binding.buttonResetBroadcast.setOnClickListener(this)
         binding.buttonSendBroadcast.setOnClickListener(this)
 
@@ -83,7 +85,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(view: View) {
         when(view) {
             binding.buttonPermission -> getNotificationPermission()
-            binding.buttonPushNotification -> sendNotification()
+            binding.buttonPushNotification -> sendNotificationDocumentation()
+            binding.buttonPushNotificationDetails -> sendNotificationDetails()
             binding.buttonResetBroadcast -> resetBroadcastTexts()
             binding.buttonSendBroadcast -> sendBroadcast()
         }
@@ -133,14 +136,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }, 1_000)
     }
 
-    private fun sendNotification() {
-        val intent =
-            Intent(Intent.ACTION_VIEW, "https://developer.android.com/".toUri())
-        val pendingIntentFlag =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent, pendingIntentFlag)
-
+    private fun sendNotification(pendingIntent: PendingIntent, texts: NotificationTexts) {
         val notificationManager =
             getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
@@ -148,11 +144,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .Builder(this, NOTIFICATION_CHANNEL_ID)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setContentText("Click here to go to android docs")
-            .setContentTitle("Android Documentation")
+            .setContentText(texts.text)
+            .setContentTitle(texts.title)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setSmallIcon(R.drawable.outline_alarm_24)
-            .setSubText("Docs")
+            .setSubText(texts.subtext)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
@@ -167,7 +163,51 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
+    private fun sendNotificationDetails() {
+        val intent = Intent(this, DetailsActivity::class.java).apply {
+            putExtra(EXTRA_INFO, "Press back button to navigate back to home")
+        }
+        val pendingIntent = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(intent)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) getPendingIntent(
+                NOTIFICATION_ID,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            else getPendingIntent(
+                NOTIFICATION_ID, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+
+        val notificationTexts = NotificationTexts(
+            "Go To Details",
+            "Click this to go to details",
+            "Details"
+        )
+        sendNotification(pendingIntent, notificationTexts)
+    }
+
+    private fun sendNotificationDocumentation() {
+        val intent =
+            Intent(Intent.ACTION_VIEW, "https://developer.android.com/".toUri())
+        val pendingIntentFlag =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent, pendingIntentFlag)
+
+        val notificationTexts = NotificationTexts(
+            "Android Documentation",
+            "Click here to go to android docs",
+            "Docs"
+        )
+        sendNotification(pendingIntent, notificationTexts)
+    }
+
     private fun showToast(text: String, context: Context = this, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, text, duration).show()
     }
+
+    private data class NotificationTexts(
+        val title: String,
+        val text: String,
+        val subtext: String
+    )
 }

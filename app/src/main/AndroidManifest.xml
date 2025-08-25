@@ -15,7 +15,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidPractice">
         <activity
+            android:name=".DetailsActivity"
+            android:parentActivityName=".MainActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

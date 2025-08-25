@@ -30,7 +30,9 @@
         android:id="@+id/buttonSendBroadcast"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
         android:text="Send Delayed (1s) Broadcast Intent"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintTop_toBottomOf="@id/buttonPushNotification"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/buttonResetBroadcast"/>
@@ -61,5 +63,15 @@
         app:layout_constraintTop_toBottomOf="@id/textViewElapsedTime"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/buttonPushNotificationDetails"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Push Details Notification"
+        app:layout_constraintTop_toBottomOf="@id/textViewBroadcastData"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
