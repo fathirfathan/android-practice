@@ -137,9 +137,21 @@
         android:id="@+id/buttonSetAlarm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
         android:text="Set Alarm"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintTop_toBottomOf="@id/linearLayoutDate"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/buttonCancelDailyAlarm"/>
+
+    <Button
+        android:id="@+id/buttonCancelDailyAlarm"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancel Daily Alarm"
+        app:layout_constraintTop_toBottomOf="@id/linearLayoutDate"
+        app:layout_constraintLeft_toRightOf="@id/buttonSetAlarm"
         app:layout_constraintRight_toRightOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

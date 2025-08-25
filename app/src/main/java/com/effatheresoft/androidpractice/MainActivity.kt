@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.effatheresoft.androidpractice.AlarmReceiver.Companion.TYPE_DAILY
 import com.effatheresoft.androidpractice.DetailsActivity.Companion.EXTRA_INFO
 import com.effatheresoft.androidpractice.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
@@ -75,6 +76,7 @@ class MainActivity : AppCompatActivity(),
 
     override fun onClick(view: View) {
         when(view) {
+            binding.buttonCancelDailyAlarm -> cancelDailyAlarm()
             binding.buttonPermission -> getNotificationPermission()
             binding.buttonPushNotification -> sendNotificationDocumentation()
             binding.buttonPushNotificationDetails -> sendNotificationDetails()
@@ -83,6 +85,7 @@ class MainActivity : AppCompatActivity(),
             binding.buttonSetAlarm -> setAlarm()
             binding.buttonSetDate -> setDate()
             binding.buttonSetTime -> setTime()
+            binding.checkboxIsAlarmDaily -> toggleDatePickerVisibility()
         }
     }
 
@@ -101,12 +104,23 @@ class MainActivity : AppCompatActivity(),
         binding.textViewTime.text = timeFormat.format(calendar.time)
     }
 
+    fun cancelDailyAlarm() = alarmReceiver.cancelAlarm(this, TYPE_DAILY)
+
     private fun getNotificationPermission() {
         if (Build.VERSION.SDK_INT >= 33)
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         else showToast("Permission is not needed")
     }
 
+
+    private fun isDateInvalid(date: String, format: String): Boolean {
+        return try {
+            val dateFormat = SimpleDateFormat(format, Locale.getDefault())
+            dateFormat.isLenient = false
+            dateFormat.parse(date)
+            false
+        } catch (e: Exception) { true }
+    }
 
     private fun registerActionLongRunningBroadcastReceiver() {
         val actionIntentFilter = IntentFilter(ACTION_LONG_RUNNING)
@@ -229,6 +243,37 @@ class MainActivity : AppCompatActivity(),
     private fun setAlarm() {
         val date = binding.textViewDate.text.toString()
         val time = binding.textViewTime.text.toString()
+
+        if (isDateInvalid(time, "HH:mm")) {
+            showToast("Pick time first", this, Toast.LENGTH_SHORT)
+            return }
+
+        if (binding.checkboxIsAlarmDaily.isChecked) {
+            setAlarmDaily()
+        } else {
+            if (isDateInvalid(date, "yyyy-MM-dd")) {
+                showToast("Pick date first", this, Toast.LENGTH_SHORT)
+                return }
+            setAlarmOnce()
+        }
+    }
+
+    private fun setAlarmDaily() {
+        val time = binding.textViewTime.text.toString()
+        val timeArray = time.split(":").toTypedArray()
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeArray[0]))
+            set(Calendar.MINUTE, Integer.parseInt(timeArray[1]))
+            set(Calendar.SECOND, 0) }
+        val timeInMillis = calendar.timeInMillis
+
+        alarmReceiver.setDailyAlarm(this, timeInMillis,
+            "This notification is created by AlarmReceiver")
+    }
+
+    private fun setAlarmOnce() {
+        val date = binding.textViewDate.text.toString()
+        val time = binding.textViewTime.text.toString()
         val dateArray = date.split("-").toTypedArray()
         val timeArray = time.split(":").toTypedArray()
         val calendar = Calendar.getInstance().apply { set(
@@ -247,6 +292,7 @@ class MainActivity : AppCompatActivity(),
     private fun setDate() = DatePickerFragment().show(supportFragmentManager, null)
 
     private fun setOnClickListeners() {
+        binding.buttonCancelDailyAlarm.setOnClickListener(this)
         binding.buttonPermission.setOnClickListener(this)
         binding.buttonPushNotification.setOnClickListener(this)
         binding.buttonPushNotificationDetails.setOnClickListener(this)
@@ -255,6 +301,7 @@ class MainActivity : AppCompatActivity(),
         binding.buttonSetAlarm.setOnClickListener(this)
         binding.buttonSetDate.setOnClickListener(this)
         binding.buttonSetTime.setOnClickListener(this)
+        binding.checkboxIsAlarmDaily.setOnClickListener(this)
     }
 
     private fun setSystemBarsPadding() {
@@ -273,6 +320,17 @@ class MainActivity : AppCompatActivity(),
 
     private fun showToast(text: String, context: Context = this, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, text, duration).show()
+    }
+
+    private fun toggleDatePickerVisibility() {
+        if (binding.checkboxIsAlarmDaily.isChecked) {
+            binding.buttonSetDate.visibility = View.GONE
+            binding.textViewDate.visibility = View.GONE
+        }
+        else {
+            binding.buttonSetDate.visibility = View.VISIBLE
+            binding.textViewDate.visibility = View.VISIBLE
+        }
     }
 
     data class NotificationTexts(

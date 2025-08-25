@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import java.util.Calendar
@@ -17,6 +18,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     companion object {
         const val ALARM_ID = 3
+        const val ALARM_ID_DAILY = 4
         const val EXTRA_DATA = "extra_data"
         const val EXTRA_TYPE = "extra_type"
         const val NOTIFICATION_CHANNEL_ID_ALARM = "notification_channel_id_alarm"
@@ -52,6 +54,41 @@ class AlarmReceiver : BroadcastReceiver() {
             AlarmManager.RTC_WAKEUP,
             timeInMillis,
             pendingIntent)
+    }
+
+    fun setDailyAlarm(context: Context, timeInMillis: Long, message: String) {
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            putExtra(EXTRA_TYPE, TYPE_DAILY)
+            putExtra(EXTRA_DATA, message) }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            ALARM_ID_DAILY,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE)
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.setInexactRepeating(
+            AlarmManager.RTC_WAKEUP,
+            timeInMillis,
+            AlarmManager.INTERVAL_DAY,
+            pendingIntent)
+
+        Toast.makeText(context, "Daily alarm is set", Toast.LENGTH_SHORT).show()
+    }
+
+    fun cancelAlarm(context: Context, type: String) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, AlarmReceiver::class.java)
+        val requestCode = when(type) {
+            TYPE_ONCE -> ALARM_ID
+            TYPE_DAILY -> ALARM_ID_DAILY
+            else -> ALARM_ID_DAILY }
+        val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE)
+        if (pendingIntent != null) {
+            pendingIntent.cancel()
+            alarmManager.cancel(pendingIntent)
+            Toast.makeText(context, "Alarm is cancelled", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun pushNotification(context: Context, title: String, message: String) {
