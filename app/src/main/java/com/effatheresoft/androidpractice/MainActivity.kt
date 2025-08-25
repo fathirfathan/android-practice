@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -25,10 +26,18 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.effatheresoft.androidpractice.DetailsActivity.Companion.EXTRA_INFO
 import com.effatheresoft.androidpractice.databinding.ActivityMainBinding
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import java.util.concurrent.Executors
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
+class MainActivity : AppCompatActivity(),
+    View.OnClickListener,
+    DatePickerFragment.DatePickerListener,
+    TimePickerFragment.TimePickerListener
+{
     private lateinit var actionBroadcastReceiver: BroadcastReceiver
+    private lateinit var alarmReceiver: AlarmReceiver
     private lateinit var binding: ActivityMainBinding
     private lateinit var broadcastDataStringFormat: String
     private lateinit var timeStringFormat: String
@@ -41,40 +50,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        setSystemBarsPadding()
 
+        alarmReceiver = AlarmReceiver()
         broadcastDataStringFormat = getString(R.string.received_broadcast_data)
         timeStringFormat = getString(R.string.elapsed_time)
 
         binding.textViewBroadcastData.text = broadcastDataStringFormat.format("Not Received")
         binding.textViewElapsedTime.text = timeStringFormat.format("0.00s")
 
-        binding.buttonPermission.setOnClickListener(this)
-        binding.buttonPushNotification.setOnClickListener(this)
-        binding.buttonPushNotificationDetails.setOnClickListener(this)
-        binding.buttonResetBroadcast.setOnClickListener(this)
-        binding.buttonSendBroadcast.setOnClickListener(this)
-
-        val actionIntentFilter = IntentFilter(ACTION_LONG_RUNNING)
-        actionBroadcastReceiver = object: BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                binding.textViewBroadcastData.text =
-                    broadcastDataStringFormat.format("Received")
-            }
-        }
-        ContextCompat.registerReceiver(
-            this,
-            actionBroadcastReceiver,
-            actionIntentFilter,
-            ContextCompat.RECEIVER_NOT_EXPORTED)
+        setOnClickListeners()
+        registerActionLongRunningBroadcastReceiver()
     }
 
     override fun onDestroy() {
@@ -89,13 +80,47 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             binding.buttonPushNotificationDetails -> sendNotificationDetails()
             binding.buttonResetBroadcast -> resetBroadcastTexts()
             binding.buttonSendBroadcast -> sendBroadcast()
+            binding.buttonSetAlarm -> setAlarm()
+            binding.buttonSetDate -> setDate()
+            binding.buttonSetTime -> setTime()
         }
+    }
+
+    override fun onDatePicked(year: Int, month: Int, dayOfMonth: Int) {
+        val calendar = Calendar.getInstance().apply { set(year, month, dayOfMonth) }
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        binding.textViewDate.text = dateFormat.format(calendar.time)
+    }
+
+    override fun onTimePicked(hourOfDay: Int, minute: Int) {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hourOfDay)
+            set(Calendar.MINUTE, minute)
+        }
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        binding.textViewTime.text = timeFormat.format(calendar.time)
     }
 
     private fun getNotificationPermission() {
         if (Build.VERSION.SDK_INT >= 33)
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         else showToast("Permission is not needed")
+    }
+
+
+    private fun registerActionLongRunningBroadcastReceiver() {
+        val actionIntentFilter = IntentFilter(ACTION_LONG_RUNNING)
+        actionBroadcastReceiver = object: BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                binding.textViewBroadcastData.text =
+                    broadcastDataStringFormat.format("Received")
+            }
+        }
+        ContextCompat.registerReceiver(
+            this,
+            actionBroadcastReceiver,
+            actionIntentFilter,
+            ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     private fun resetBroadcastTexts() {
@@ -201,13 +226,123 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         sendNotification(pendingIntent, notificationTexts)
     }
 
+    private fun setAlarm() {
+        val date = binding.textViewDate.text.toString()
+        val time = binding.textViewTime.text.toString()
+        val dateArray = date.split("-").toTypedArray()
+        val timeArray = time.split(":").toTypedArray()
+        val calendar = Calendar.getInstance().apply { set(
+            Integer.parseInt(dateArray[0]),
+            Integer.parseInt(dateArray[1]) - 1,
+            Integer.parseInt(dateArray[2]),
+            Integer.parseInt(timeArray[0]),
+            Integer.parseInt(timeArray[1]),
+            0) }
+        val timeInMillis = calendar.timeInMillis
+
+        alarmReceiver.setOneTimeAlarm(this, timeInMillis,
+            "This notification is created by AlarmReceiver")
+    }
+
+    private fun setDate() = DatePickerFragment().show(supportFragmentManager, null)
+
+    private fun setOnClickListeners() {
+        binding.buttonPermission.setOnClickListener(this)
+        binding.buttonPushNotification.setOnClickListener(this)
+        binding.buttonPushNotificationDetails.setOnClickListener(this)
+        binding.buttonResetBroadcast.setOnClickListener(this)
+        binding.buttonSendBroadcast.setOnClickListener(this)
+        binding.buttonSetAlarm.setOnClickListener(this)
+        binding.buttonSetDate.setOnClickListener(this)
+        binding.buttonSetTime.setOnClickListener(this)
+    }
+
+    private fun setSystemBarsPadding() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom)
+            insets
+        }
+    }
+
+    private fun setTime() = TimePickerFragment().show(supportFragmentManager, null)
+
     private fun showToast(text: String, context: Context = this, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, text, duration).show()
     }
 
-    private data class NotificationTexts(
+    data class NotificationTexts(
         val title: String,
         val text: String,
         val subtext: String
     )
+}
+
+
+
+
+
+
+
+
+
+
+private class NotificationExperiment() {
+    private data class NotificationChannelInfo(
+        val channelId: String,
+        val channelName: String
+    )
+    private data class NotificationInfo(
+        val id: Int,
+        val title: String,
+        val bodyText: String,
+        val subtext: String? = null,
+        val importance: Int? = null,
+    )
+    private fun pushNotification(
+        context: Context,
+        notificationInfo: NotificationInfo,
+        notificationChannelInfo: NotificationChannelInfo,
+        pendingIntent: PendingIntent? = null
+    ) {
+        val id = notificationInfo.id
+        val title = notificationInfo.title
+        val bodyText = notificationInfo.bodyText
+        val subtext = notificationInfo.subtext
+        val channelId = notificationChannelInfo.channelId
+        val channelName = notificationChannelInfo.channelName
+        val vibrationPattern = longArrayOf(1000, 1000, 1000, 1000, 1000)
+
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val notificationBuilder = NotificationCompat
+            .Builder(context, channelId).apply {
+                setColor(ContextCompat.getColor(context, android.R.color.transparent))
+                setContentTitle(title)
+                setContentText(bodyText)
+                setSmallIcon(R.drawable.outline_alarm_24)
+                setSound(notificationSound)
+                setVibrate(vibrationPattern)
+
+                subtext?.run { setSubText(this) }
+                pendingIntent?.run { setContentIntent(pendingIntent).setAutoCancel(true) }
+            }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = notificationInfo.importance ?: NotificationManager.IMPORTANCE_DEFAULT
+            val notificationChannel = NotificationChannel(channelId, channelName, importance).apply {
+                enableVibration(true)
+                this.vibrationPattern = vibrationPattern
+            }
+            notificationBuilder.setChannelId(channelId)
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
+        val notification = notificationBuilder.build()
+        notificationManager.notify(id, notification)
+    }
 }
